@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/tusharravindran/gitstreak/internal/config"
 	"github.com/tusharravindran/gitstreak/internal/notify"
 )
 
@@ -38,19 +39,22 @@ func runWatch(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	cfg, _ := config.Load()
+
 	fmt.Println()
 	color.New(color.Bold).Println("  Setting up daily streak reminder...")
 	fmt.Println()
 
-	if err := notify.Install(watchUsername); err != nil {
+	if err := notify.Install(watchUsername, cfg.ReminderHour, cfg.ReminderMin); err != nil {
 		color.Red("  ✗ " + err.Error())
 		os.Exit(1)
 	}
 
-	color.New(color.Faint).Println("  Every night at 9:00 PM, gitstreak will check if you've committed.")
+	color.New(color.Faint).Printf("  Every day at %s, gitstreak will check if you've committed.\n", cfg.ReminderLabel())
 	color.New(color.Faint).Println("  If not, you'll get a macOS notification.")
 	fmt.Println()
-	color.New(color.Faint).Println("  To remove: gitstreak unwatch")
+	color.New(color.Faint).Println("  Change time: gitstreak config --reminder-time 20:00")
+	color.New(color.Faint).Println("  Remove:      gitstreak unwatch")
 	fmt.Println()
 }
 

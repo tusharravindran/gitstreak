@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	gh "github.com/tusharravindran/gitstreak/internal/github"
+	"github.com/tusharravindran/gitstreak/internal/roast"
 	"github.com/tusharravindran/gitstreak/internal/streak"
 	"github.com/tusharravindran/gitstreak/internal/suggest"
 )
@@ -102,8 +103,29 @@ func runStatus(cmd *cobra.Command, args []string) {
 	faint.Println("                " + heatBlock(0) + " 0   " + heatBlock(1) + " 1–2   " + heatBlock(3) + " 3–5   " + heatBlock(6) + " 6+")
 	fmt.Println()
 
-	// Suggestions if no commit today
-	if !result.CommittedToday {
+	// Roast / appreciate / milestone
+	if result.CommittedToday {
+		if msg := roast.MilestoneFor(result.CurrentStreak); msg != "" {
+			// Milestone — big display
+			color.New(color.FgHiYellow, color.Bold).Printf("  %s\n", msg)
+		} else if msg := roast.ForStreak(result.CurrentStreak); msg != "" {
+			color.New(color.FgGreen).Printf("  %s\n", fmt.Sprintf(msg, result.CurrentStreak))
+		}
+		fmt.Println()
+	} else {
+		// How many days since last commit?
+		daysMissed := 0
+		if result.LastActiveDate != "" {
+			last, err := time.Parse("2006-01-02", result.LastActiveDate)
+			if err == nil {
+				daysMissed = int(time.Since(last).Hours() / 24)
+			}
+		}
+		if daysMissed > 3 {
+			color.New(color.FgRed, color.Bold).Printf("  %s\n", fmt.Sprintf(roast.ForBrokenStreak(daysMissed), daysMissed))
+			fmt.Println()
+		}
+
 		yellow.Println("  💡 Quick tasks to stay green:")
 		tasks := suggest.Pick(3)
 		for _, t := range tasks {
@@ -111,7 +133,7 @@ func runStatus(cmd *cobra.Command, args []string) {
 			faint.Printf("        %s  (%s)\n", t.Description, t.TimeEst)
 			fmt.Println()
 		}
-		fmt.Println("  Run " + color.CyanString("gitstreak watch --username "+username) + " to get a 9 PM reminder.")
+		fmt.Println("  Run " + color.CyanString("gitstreak watch --username "+username) + " to get a daily reminder.")
 	}
 }
 

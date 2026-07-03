@@ -24,9 +24,9 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
-        <integer>21</integer>
+        <integer>{{.Hour}}</integer>
         <key>Minute</key>
-        <integer>0</integer>
+        <integer>{{.Minute}}</integer>
     </dict>
     <key>EnvironmentVariables</key>
     <dict>
@@ -48,9 +48,11 @@ type PlistData struct {
 	Username   string
 	Token      string
 	LogPath    string
+	Hour       int
+	Minute     int
 }
 
-func Install(username string) error {
+func Install(username string, hour, minute int) error {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("could not find binary path: %w", err)
@@ -70,6 +72,8 @@ func Install(username string) error {
 		Username:   username,
 		Token:      token,
 		LogPath:    logPath,
+		Hour:       hour,
+		Minute:     minute,
 	}
 
 	f, err := os.Create(plistPath)
