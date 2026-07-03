@@ -153,7 +153,13 @@ Settings are stored at `~/.config/gitstreak/config.json`.
 
 ## Why
 
-I kept breaking my GitHub streak because I forgot to commit on weekends or during deep-focus days at work. A quick terminal check and a 9 PM notification fixed the forgetting. Skip days fixed the guilt. Built this in a weekend.
+For a long time I was heads-down on my organization's GitHub — shipping features, closing PRs, doing real work. But all of that lives on a company account. My personal profile was a ghost town.
+
+I decided to block 2–3 hours every day specifically for my personal GitHub — learning, building, and shipping tools that are actually mine. The problem was I kept forgetting. End of the day rolls around, I've been coding for 8 hours, and the last thing on my mind is opening a side project.
+
+So I built gitstreak. A quick `gitstreak status` in the morning tells me where I stand. A nudge at a time I choose reminds me before the day slips away. Skip days mean I'm not guilted on weekends. And when the streak grows, it actually feels like something worth protecting.
+
+Built this in a weekend. Using it every day.
 
 ---
 
