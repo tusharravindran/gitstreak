@@ -50,7 +50,7 @@ func runNotifyCheck(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	result := streak.Calculate(days)
+	result := streak.Calculate(days, cfg.SkipDays)
 
 	if result.CommittedToday {
 		// Celebrate milestones silently via notification

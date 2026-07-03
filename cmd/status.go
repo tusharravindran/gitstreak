@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/tusharravindran/gitstreak/internal/config"
 	gh "github.com/tusharravindran/gitstreak/internal/github"
 	"github.com/tusharravindran/gitstreak/internal/roast"
 	"github.com/tusharravindran/gitstreak/internal/streak"
@@ -36,6 +37,8 @@ func runStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	cfg, _ := config.Load()
+
 	color.New(color.Faint).Print("Fetching contributions for @" + username + "... ")
 	days, name, err := gh.FetchContributions(username)
 	if err != nil {
@@ -46,7 +49,7 @@ func runStatus(cmd *cobra.Command, args []string) {
 	fmt.Println("done")
 	fmt.Println()
 
-	result := streak.Calculate(days)
+	result := streak.Calculate(days, cfg.SkipDays)
 
 	bold := color.New(color.Bold)
 	green := color.New(color.FgGreen, color.Bold)
