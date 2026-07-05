@@ -14,6 +14,8 @@ import (
 )
 
 var notifyUsername string
+var notifyForce bool
+var notifyDryRun bool
 
 var notifyCheckCmd = &cobra.Command{
 	Use:    "notify-check",
@@ -23,6 +25,8 @@ var notifyCheckCmd = &cobra.Command{
 
 func init() {
 	notifyCheckCmd.Flags().StringVarP(&notifyUsername, "username", "u", "", "GitHub username")
+	notifyCheckCmd.Flags().BoolVar(&notifyForce, "force", false, "Ignore skip days (for testing)")
+	notifyCheckCmd.Flags().BoolVar(&notifyDryRun, "dry-run", false, "Send reminder notification even if already committed today")
 	rootCmd.AddCommand(notifyCheckCmd)
 }
 
@@ -39,8 +43,8 @@ func runNotifyCheck(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Skip if today is a skip day
-	if cfg.IsTodaySkipped() {
+	// Skip if today is a skip day (unless --force is passed for testing)
+	if !notifyForce && cfg.IsTodaySkipped() {
 		return
 	}
 
@@ -52,11 +56,8 @@ func runNotifyCheck(cmd *cobra.Command, args []string) {
 
 	result := streak.Calculate(days, cfg.SkipDays)
 
-	if result.CommittedToday {
-		// Celebrate milestones silently via notification
-		if msg := roast.MilestoneFor(result.CurrentStreak); msg != "" {
-			notify.Send("gitstreak 🎉", msg)
-		}
+	if result.CommittedToday && !notifyDryRun {
+		notify.SendWithVoice("gitstreak 🎉", roast.PraiseForCommit(result.CurrentStreak), "Samantha")
 		return
 	}
 
@@ -73,13 +74,14 @@ func runNotifyCheck(cmd *cobra.Command, args []string) {
 	if daysMissed > 3 {
 		title = "gitstreak 💀"
 		message = fmt.Sprintf(roast.ForBrokenStreak(daysMissed), daysMissed)
+		notify.SendUrgent(title, message, "Samantha")
 	} else if result.CurrentStreak > 0 {
 		title = "gitstreak 🔥 streak at risk!"
 		message = fmt.Sprintf("You're on a %d-day streak. Don't break it now.", result.CurrentStreak)
+		notify.SendUrgent(title, message, "Samantha")
 	} else {
 		title = "gitstreak — commit something today"
-		message = "No commits yet. Even a README update counts. 👀"
+		message = "No commits yet. Even a README update counts."
+		notify.Send(title, message)
 	}
-
-	notify.Send(title, message)
 }

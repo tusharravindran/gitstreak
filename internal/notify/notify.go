@@ -92,10 +92,21 @@ func Install(username string, hour, minute int) error {
 		return fmt.Errorf("launchctl load failed: %s", string(out))
 	}
 
-	fmt.Printf("✅ gitstreak will remind you at 9:00 PM daily\n")
+	fmt.Printf("✅ gitstreak reminder installed\n")
 	fmt.Printf("   Plist: %s\n", plistPath)
 	fmt.Printf("   Logs:  %s\n", logPath)
 	return nil
+}
+
+// IsInstalled reports whether the daily reminder LaunchAgent is currently set up.
+func IsInstalled() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+	plistPath := filepath.Join(home, "Library", "LaunchAgents", "com.tusharravindran.gitstreak.plist")
+	_, err = os.Stat(plistPath)
+	return err == nil
 }
 
 func Uninstall() error {
@@ -114,6 +125,27 @@ func Uninstall() error {
 }
 
 func Send(title, message string) {
-	script := fmt.Sprintf(`display notification "%s" with title "%s" sound name "Glass"`, message, title)
+	script := fmt.Sprintf(`display notification "%s" with title "%s" sound name "Funk"`, message, title)
 	exec.Command("osascript", "-e", script).Run()
+}
+
+// SendUrgent fires a louder notification + voice for roast/critical alerts
+func SendUrgent(title, message, voice string) {
+	script := fmt.Sprintf(`display notification "%s" with title "%s" sound name "Sosumi"`, message, title)
+	exec.Command("osascript", "-e", script).Run()
+	speak(message, voice)
+}
+
+// SendWithVoice fires the standard pleasant notification and speaks the
+// message aloud, using the same voice as SendUrgent for consistency.
+func SendWithVoice(title, message, voice string) {
+	Send(title, message)
+	speak(message, voice)
+}
+
+func speak(message, voice string) {
+	if voice == "" {
+		voice = "Samantha"
+	}
+	exec.Command("say", "-v", voice, message).Run()
 }

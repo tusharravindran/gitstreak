@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/tusharravindran/gitstreak/internal/config"
+	"github.com/tusharravindran/gitstreak/internal/notify"
 	"github.com/tusharravindran/gitstreak/internal/roast"
 )
 
@@ -94,6 +95,21 @@ func runConfig(cmd *cobra.Command, args []string) {
 		if skipDays == "" && !clearSkip {
 			green.Println("\n  ✓ Config saved")
 		}
+
+		if (reminderTime != "" || configUser != "") && notify.IsInstalled() {
+			username := cfg.Username
+			if username == "" {
+				username = os.Getenv("GITHUB_USERNAME")
+			}
+			if username != "" {
+				if err := notify.Install(username, cfg.ReminderHour, cfg.ReminderMin); err != nil {
+					color.Red("  ✗ Could not update reminder schedule: " + err.Error())
+				} else {
+					green.Printf("  ✓ Reminder rescheduled to %s\n", cfg.ReminderLabel())
+				}
+			}
+		}
+
 		fmt.Println()
 	}
 
@@ -134,7 +150,6 @@ func printConfig(cfg config.Config) {
 	faint.Println("    gitstreak config --skip-days Mon,Tue,Wed,Thu,Fri   # only remind on weekends")
 	faint.Println("    gitstreak config --clear-skip-days")
 	fmt.Println()
-	faint.Println("  After changing time or skip days, re-run: gitstreak watch")
 	fmt.Println()
 }
 

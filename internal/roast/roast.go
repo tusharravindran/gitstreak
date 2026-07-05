@@ -42,6 +42,12 @@ var milestones = map[int]string{
 	365: "🌟🎉 A FULL YEAR! 365 days of showing up. You absolute unit. Incredible.",
 }
 
+var earlyPraise = []string{
+	"✅ Committed today. That's how streaks start.",
+	"🌱 Nice — another day, another commit.",
+	"👏 Committed. Keep the chain going.",
+}
+
 var appreciations = []string{
 	"🔥 %d days and still going. The momentum is real.",
 	"⚡ %d-day streak. You're making it look easy.",
@@ -92,4 +98,16 @@ func MilestoneFor(streak int) string {
 		return msg
 	}
 	return ""
+}
+
+// PraiseForCommit returns a notification message for any day a commit landed —
+// milestone, generic appreciation, or a plain nod for early streak days.
+func PraiseForCommit(streak int) string {
+	if msg, ok := milestones[streak]; ok {
+		return msg
+	}
+	if streak >= 4 {
+		return pick(appreciations)
+	}
+	return pick(earlyPraise)
 }
