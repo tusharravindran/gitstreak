@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/tusharravindran/gitstreak/internal/audit"
 	"github.com/tusharravindran/gitstreak/internal/config"
 	gh "github.com/tusharravindran/gitstreak/internal/github"
 	"github.com/tusharravindran/gitstreak/internal/roast"
@@ -108,7 +109,11 @@ func runStatus(cmd *cobra.Command, args []string) {
 
 	// Roast / appreciate / milestone
 	if result.CommittedToday {
-		if msg := roast.MilestoneFor(result.CurrentStreak); msg != "" {
+		today := time.Now().Format("2006-01-02")
+		cheatMsg := checkCheatDay(username, today, cfg)
+		if cheatMsg != "" {
+			color.New(color.FgMagenta, color.Bold).Printf("  %s\n", cheatMsg)
+		} else if msg := roast.MilestoneFor(result.CurrentStreak); msg != "" {
 			// Milestone — big display
 			color.New(color.FgHiYellow, color.Bold).Printf("  %s\n", msg)
 		} else if msg := roast.ForStreak(result.CurrentStreak); msg != "" {
@@ -138,6 +143,29 @@ func runStatus(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println("  Run " + color.CyanString("gitstreak watch --username "+username) + " to get a daily reminder.")
 	}
+}
+
+// checkCheatDay audits today's commits and returns a roast if they look like
+// low-effort streak farming. Returns "" if today's commits can't be audited
+// (private/anonymized repos) or if they look genuine — in both cases it silently
+// falls back to normal status behavior. On success it also persists today's
+// single-file state (if any) for future "same file repeated" detection.
+func checkCheatDay(username, today string, cfg config.Config) string {
+	result, err := gh.FetchCommitDetail(username, today)
+	if err != nil || len(result.Commits) == 0 {
+		return ""
+	}
+
+	prev := cfg.RecentSingleFiles(today, 7)
+	verdict := audit.Evaluate(result.Commits, prev)
+
+	cfg.RecordAuditedFile(today, audit.SingleFile(result.Commits))
+	_ = config.Save(cfg)
+
+	if !verdict.IsCheatDay {
+		return ""
+	}
+	return roast.ForCheatDay(verdict.Reasons)
 }
 
 func plural(n int) string {

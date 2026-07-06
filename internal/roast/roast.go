@@ -1,7 +1,9 @@
 package roast
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -40,6 +42,25 @@ var milestones = map[int]string{
 	150: "🧠 150 days. At this point your keyboard is part of your identity.",
 	200: "🏅✨ 200 days! GitHub should send you a trophy. This is elite-level.",
 	365: "🌟🎉 A FULL YEAR! 365 days of showing up. You absolute unit. Incredible.",
+}
+
+var cheatDayRoasts = []string{
+	"🔥 Streak maintained!! Broo you changed one file and committed. That's a cheat day and you know it — %s.",
+	"😏 Technically a commit. Technically a streak. Technically trying. (%s)",
+	"🫣 Green square secured via the bare minimum — %s.",
+	"🩹 That's not a commit, that's a Band-Aid on your streak. %s.",
+	"📎 Streak alive, effort dead. %s.",
+	"🥷 Sneaking a cheat day past your own contribution graph — %s. Nice try.",
+}
+
+// ForCheatDay returns a roast for a low-effort commit that technically kept the streak
+// alive but didn't really earn it. reasons describes what tripped the check.
+func ForCheatDay(reasons []string) string {
+	if len(reasons) == 0 {
+		return ""
+	}
+	msg := pick(cheatDayRoasts)
+	return fmt.Sprintf(msg, strings.Join(reasons, ", "))
 }
 
 var earlyPraise = []string{

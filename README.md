@@ -48,6 +48,11 @@ export GITHUB_USERNAME=your_github_handle
 
 3. Reload: `source ~/.zshrc`
 
+`read:user` is all you need for `status`, `suggest`, and `watch`. If you also want
+cheat-day detection (`gitstreak audit`, and the inline nudge in `status`), the token
+needs `repo` scope instead — that's what lets gitstreak read commit contents in your
+private repos. Public-only accounts can skip this; it's opt-in.
+
 ---
 
 ## Commands
@@ -63,6 +68,44 @@ gitstreak status --username tusharravindran
 
 Streak appreciation fires at 4+ days. Milestone messages at 7, 14, 30, 50, 100, 365 days.
 If your streak has been broken for more than 3 days, it roasts you instead.
+
+If today's commit looks like it was just there to keep the streak alive — a one-line
+change, a lazy commit message, docs/config-only, or the same single file edited days in
+a row — `status` roasts that too, instead of showing the usual streak appreciation.
+Requires a `repo`-scoped token (see Setup); silently skipped otherwise.
+
+---
+
+### `gitstreak audit`
+
+Checks whether your recent streak days were genuine or cheat days — a one-line commit
+that technically kept the streak alive but didn't really earn it.
+
+```bash
+gitstreak audit
+gitstreak audit --days 14
+```
+
+```
+  Auditing last 7 days for @tusharravindran
+
+  2026-06-30  ✅ genuine
+  2026-07-01  😏 cheat day  (1 line changed, message: "wip")
+  2026-07-02  ✅ genuine
+  2026-07-03  —  no commits
+  2026-07-04  😏 cheat day  (docs/config only, no source changes)
+  2026-07-05  ✅ genuine
+  2026-07-06  ✅ genuine
+
+  4 genuine, 2 cheat days, 0 unauditable
+  Your real streak is a bit shorter than your GitHub graph says 👀
+```
+
+Days it can't inspect (private repos the token can't read, or GitHub-anonymized
+contributions) show as unauditable rather than being guessed at either way.
+
+Requires a `repo`-scoped `GITHUB_TOKEN` (see Setup) — `read:user` alone can't read
+commit contents.
 
 ---
 

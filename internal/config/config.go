@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -14,6 +15,11 @@ type Config struct {
 	ReminderHour int    `json:"reminder_hour"`
 	ReminderMin  int    `json:"reminder_minute"`
 	SkipDays     []int  `json:"skip_days"` // 0=Sunday … 6=Saturday
+
+	// LastAuditedFiles maps date (YYYY-MM-DD) to the lone file touched that day, when
+	// that day's contribution was a single-file commit. Used to detect the same file
+	// being farmed for streak days in a row. Pruned to the last 7 entries on save.
+	LastAuditedFiles map[string]string `json:"last_audited_files,omitempty"`
 }
 
 func Default() Config {
@@ -149,6 +155,50 @@ func ParseDays(input string) ([]int, error) {
 // DayName returns the weekday name for a given int
 func DayName(d int) string {
 	return []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}[d%7]
+}
+
+// RecordAuditedFile stores the lone file touched on the given date, pruning history
+// to the last 7 entries. Pass "" to clear the entry for a date (e.g. multi-file commit).
+func (c *Config) RecordAuditedFile(date, file string) {
+	if c.LastAuditedFiles == nil {
+		c.LastAuditedFiles = map[string]string{}
+	}
+	if file == "" {
+		delete(c.LastAuditedFiles, date)
+	} else {
+		c.LastAuditedFiles[date] = file
+	}
+
+	if len(c.LastAuditedFiles) <= 7 {
+		return
+	}
+	dates := make([]string, 0, len(c.LastAuditedFiles))
+	for d := range c.LastAuditedFiles {
+		dates = append(dates, d)
+	}
+	sort.Strings(dates)
+	for _, d := range dates[:len(dates)-7] {
+		delete(c.LastAuditedFiles, d)
+	}
+}
+
+// RecentSingleFiles returns the lone-file history for the n days immediately before
+// (not including) the given date, oldest first — used to detect "same file" farming.
+func (c Config) RecentSingleFiles(beforeDate string, n int) []string {
+	before, err := time.Parse("2006-01-02", beforeDate)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for i := n; i >= 1; i-- {
+		d := before.AddDate(0, 0, -i).Format("2006-01-02")
+		if f, ok := c.LastAuditedFiles[d]; ok {
+			out = append(out, f)
+		} else {
+			out = append(out, "")
+		}
+	}
+	return out
 }
 
 // SkipDayNames returns human-readable skip day names

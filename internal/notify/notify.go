@@ -87,6 +87,11 @@ func Install(username string, hour, minute int) error {
 		return fmt.Errorf("could not render plist: %w", err)
 	}
 
+	// Unload any previously-running job first — launchctl load is a no-op on an
+	// already-loaded job, so a stale schedule would otherwise stick around even
+	// after the plist file itself is rewritten.
+	exec.Command("launchctl", "unload", plistPath).Run()
+
 	cmd := exec.Command("launchctl", "load", "-w", plistPath)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("launchctl load failed: %s", string(out))
