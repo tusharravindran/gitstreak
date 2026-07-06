@@ -36,9 +36,15 @@ Or grab a binary from [Releases](https://github.com/tusharravindran/gitstreak/re
 
 ## Setup
 
-You need a GitHub personal access token with `read:user` scope.
+You need a GitHub personal access token. Which scope depends on what you want:
 
-1. Create one at https://github.com/settings/tokens (fine-grained, `read:user` only)
+- **`read:user` only** — enough for `status`, `suggest`, and `watch`.
+- **`repo`** — needed if you also want cheat-day detection (`gitstreak audit`, and the
+  inline nudge in `status`). That's what lets gitstreak read commit contents in your
+  private repos. Public-only accounts can skip this; it's opt-in.
+
+1. Create one at https://github.com/settings/tokens (fine-grained — `read:user`, or
+   `repo` if you want cheat-day detection)
 2. Add to your shell config (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
@@ -47,11 +53,6 @@ export GITHUB_USERNAME=your_github_handle
 ```
 
 3. Reload: `source ~/.zshrc`
-
-`read:user` is all you need for `status`, `suggest`, and `watch`. If you also want
-cheat-day detection (`gitstreak audit`, and the inline nudge in `status`), the token
-needs `repo` scope instead — that's what lets gitstreak read commit contents in your
-private repos. Public-only accounts can skip this; it's opt-in.
 
 ---
 
