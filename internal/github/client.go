@@ -85,7 +85,10 @@ type restCommit struct {
 }
 
 func token() string {
-	t := os.Getenv("GITHUB_TOKEN")
+	t := os.Getenv("GITSTREAK_GH_TOKEN")
+	if t == "" {
+		t = os.Getenv("GITHUB_TOKEN")
+	}
 	if t == "" {
 		t = os.Getenv("GH_TOKEN")
 	}
@@ -95,7 +98,7 @@ func token() string {
 func FetchContributions(username string) ([]ContributionDay, string, error) {
 	tok := token()
 	if tok == "" {
-		return nil, "", fmt.Errorf("no GitHub token found — set GITHUB_TOKEN or GH_TOKEN")
+		return nil, "", fmt.Errorf("no GitHub token found — set GITSTREAK_GH_TOKEN (or GITHUB_TOKEN/GH_TOKEN)")
 	}
 
 	now := time.Now()
@@ -154,7 +157,7 @@ func FetchContributions(username string) ([]ContributionDay, string, error) {
 func FetchCommitDetail(username, date string) (AuditResult, error) {
 	tok := token()
 	if tok == "" {
-		return AuditResult{}, fmt.Errorf("no GitHub token found — set GITHUB_TOKEN or GH_TOKEN")
+		return AuditResult{}, fmt.Errorf("no GitHub token found — set GITSTREAK_GH_TOKEN (or GITHUB_TOKEN/GH_TOKEN)")
 	}
 
 	day, err := time.Parse("2006-01-02", date)

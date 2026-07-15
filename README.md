@@ -48,9 +48,13 @@ You need a GitHub personal access token. Which scope depends on what you want:
 2. Add to your shell config (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+export GITSTREAK_GH_TOKEN=ghp_xxxxxxxxxxxx
 export GITHUB_USERNAME=your_github_handle
 ```
+
+`GITHUB_TOKEN` / `GH_TOKEN` still work as fallbacks, but `GITSTREAK_GH_TOKEN` is
+recommended — it won't collide with other tools that read `GITHUB_TOKEN` from your
+shell profile.
 
 3. Reload: `source ~/.zshrc`
 
@@ -105,7 +109,7 @@ gitstreak audit --days 14
 Days it can't inspect (private repos the token can't read, or GitHub-anonymized
 contributions) show as unauditable rather than being guessed at either way.
 
-Requires a `repo`-scoped `GITHUB_TOKEN` (see Setup) — `read:user` alone can't read
+Requires a `repo`-scoped token (see Setup) — `read:user` alone can't read
 commit contents.
 
 ---
@@ -190,7 +194,7 @@ Settings are stored at `~/.config/gitstreak/config.json`.
 
 | Variable | Description |
 |---|---|
-| `GITHUB_TOKEN` | GitHub PAT with `read:user` scope |
+| `GITSTREAK_GH_TOKEN` | GitHub PAT with `read:user` scope (falls back to `GITHUB_TOKEN`, then `GH_TOKEN`) |
 | `GITHUB_USERNAME` | Default username (overridden by `gitstreak config --username`) |
 
 ---

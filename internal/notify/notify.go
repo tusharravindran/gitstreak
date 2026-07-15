@@ -30,7 +30,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     </dict>
     <key>EnvironmentVariables</key>
     <dict>
-        <key>GITHUB_TOKEN</key>
+        <key>GITSTREAK_GH_TOKEN</key>
         <string>{{.Token}}</string>
     </dict>
     <key>RunAtLoad</key>
@@ -58,7 +58,10 @@ func Install(username string, hour, minute int) error {
 		return fmt.Errorf("could not find binary path: %w", err)
 	}
 
-	token := os.Getenv("GITHUB_TOKEN")
+	token := os.Getenv("GITSTREAK_GH_TOKEN")
+	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
+	}
 	if token == "" {
 		token = os.Getenv("GH_TOKEN")
 	}
@@ -85,6 +88,12 @@ func Install(username string, hour, minute int) error {
 	tmpl := template.Must(template.New("plist").Parse(plistTemplate))
 	if err := tmpl.Execute(f, data); err != nil {
 		return fmt.Errorf("could not render plist: %w", err)
+	}
+
+	// The plist embeds the GitHub token in plaintext — restrict it to the
+	// owner so other local users/processes can't read it off disk.
+	if err := os.Chmod(plistPath, 0600); err != nil {
+		return fmt.Errorf("could not set plist permissions: %w", err)
 	}
 
 	// Unload any previously-running job first — launchctl load is a no-op on an
